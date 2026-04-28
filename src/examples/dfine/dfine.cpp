@@ -2,6 +2,7 @@
 #include "osd/osd.hpp"
 #include "common/object.hpp"
 #include "common/timer.hpp"
+#include <cmath>
 
 static std::vector<std::string> classes_names = {
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
@@ -60,6 +61,12 @@ void run_dfine()
     for (int i = 0; i < (int)images.size(); i++)
     {
         printf("Batch %d: size : %d\n", i, (int)det[i].size());
+        for (auto& d : det[i]) {
+            float conf = d.score;
+            if (std::isnan(conf) || conf > 1.0f || conf < 0.0f) {
+                printf("Warning: unusual confidence value: %f\n", conf);
+            }
+        }
         osd(images[i], det[i]);
         cv::imwrite("result/dfine.jpg", images[i]);
     }
