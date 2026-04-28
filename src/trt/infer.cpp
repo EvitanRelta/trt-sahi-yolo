@@ -1,17 +1,8 @@
 #include "trt/infer.hpp"
 #include "trt/yolo/yolo11.hpp"
-#include "trt/yolo/yolo11obb.hpp"
-#include "trt/yolo/yolo11pose.hpp"
-#include "trt/yolo/yolo11seg.hpp"
-#include "trt/yolo/yolov5.hpp"
 #include "trt/dfine/dfine.hpp"
 #include "trt/dfinesahi/dfinesahi.hpp"
-
-#include "trt/sahiyolo/yolo11_pose_sahi.hpp"
 #include "trt/sahiyolo/yolo11_sahi.hpp"
-#include "trt/sahiyolo/yolo11_seg_sahi.hpp"
-#include "trt/sahiyolo/yolo11_obb_sahi.hpp"
-#include "trt/sahiyolo/yolov5_sahi.hpp"
 
 std::shared_ptr<InferBase> load(const std::string &model_path,
                                 ModelType model_type,
@@ -31,40 +22,12 @@ std::shared_ptr<InferBase> load(const std::string &model_path,
     std::shared_ptr<InferBase> instance;
     switch (model_type)
     {
-    case ModelType::YOLOV5:
-        instance = yolo::load_yolo_v5(model_path, names, gpu_id, confidence_threshold, nms_threshold, max_batch_size);
-        break;
     case ModelType::YOLO11:
         instance = yolo::load_yolo_11(model_path, names, gpu_id, confidence_threshold, nms_threshold, max_batch_size);
-        break;
-    case ModelType::YOLO11SEG:
-        instance =
-            yolo::load_yolo_11_seg(model_path, names, gpu_id, confidence_threshold, nms_threshold, max_batch_size);
-        break;
-    case ModelType::YOLO11POSE:
-        instance =
-            yolo::load_yolo_11_pose(model_path, names, gpu_id, confidence_threshold, nms_threshold, max_batch_size);
-        break;
-    case ModelType::YOLO11OBB:
-        instance =
-            yolo::load_yolo_11_obb(model_path, names, gpu_id, confidence_threshold, nms_threshold, max_batch_size);
         break;
     case ModelType::DFINE:
         instance =
             dfine::load_dfine(model_path, names, gpu_id, confidence_threshold, nms_threshold, max_batch_size);
-        break;
-    case ModelType::YOLOV5SAHI:
-        instance = sahiyolo::load_yolo_v5_sahi(model_path,
-                                               names,
-                                               gpu_id,
-                                               confidence_threshold,
-                                               nms_threshold,
-                                               max_batch_size,
-                                               auto_slice,
-                                               slice_width,
-                                               slice_height,
-                                               slice_horizontal_ratio,
-                                               slice_vertical_ratio);
         break;
     case ModelType::YOLO11SAHI:
         instance = sahiyolo::load_yolo_11_sahi(model_path,
@@ -78,45 +41,6 @@ std::shared_ptr<InferBase> load(const std::string &model_path,
                                                slice_height,
                                                slice_horizontal_ratio,
                                                slice_vertical_ratio);
-        break;
-    case ModelType::YOLO11POSESAHI:
-        instance = sahiyolo::load_yolo_11_pose_sahi(model_path,
-                                                    names,
-                                                    gpu_id,
-                                                    confidence_threshold,
-                                                    nms_threshold,
-                                                    max_batch_size,
-                                                    auto_slice,
-                                                    slice_width,
-                                                    slice_height,
-                                                    slice_horizontal_ratio,
-                                                    slice_vertical_ratio);
-        break;
-    case ModelType::YOLO11SEGSAHI:
-        instance = sahiyolo::load_yolo_11_seg_sahi(model_path,
-                                                   names,
-                                                   gpu_id,
-                                                   confidence_threshold,
-                                                   nms_threshold,
-                                                   max_batch_size,
-                                                   auto_slice,
-                                                   slice_width,
-                                                   slice_height,
-                                                   slice_horizontal_ratio,
-                                                   slice_vertical_ratio);
-        break;
-    case ModelType::YOLO11OBBSAHI:
-        instance = sahiyolo::load_yolo_11_obb_sahi(model_path,
-                                                   names,
-                                                   gpu_id,
-                                                   confidence_threshold,
-                                                   nms_threshold,
-                                                   max_batch_size,
-                                                   auto_slice,
-                                                   slice_width,
-                                                   slice_height,
-                                                   slice_horizontal_ratio,
-                                                   slice_vertical_ratio);
         break;
     case ModelType::DFINESAHI:
         instance = dfinesahi::load_dfine_sahi(model_path,

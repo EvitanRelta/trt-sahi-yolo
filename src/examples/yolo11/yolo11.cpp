@@ -16,7 +16,7 @@ static std::vector<std::string> classes_names = {
 
 void run_yolo11()
 {
-    std::shared_ptr<InferBase> model_ = load("models/engine/yolo11l.transd.engine",
+    std::shared_ptr<InferBase> model_ = load("models/yolo11n.engine",
         ModelType::YOLO11,
         classes_names,
         0,
@@ -35,13 +35,13 @@ void run_yolo11()
     {
         printf("Batch %d: size : %d\n", i, det[i].size());
         osd(images[i], det[i]);
-        cv::imwrite("result/dfine.jpg", images[i]);
+        cv::imwrite("result/yolo11.jpg", images[i]);
     }
 }
 
 void run_yolo11_sahi()
 {
-    std::shared_ptr<InferBase> model_ = load("models/engine/yolo11l.transd.engine",
+    std::shared_ptr<InferBase> model_ = load("models/yolo11n.engine",
         ModelType::YOLO11SAHI,
         classes_names,
         0,
@@ -60,6 +60,6 @@ void run_yolo11_sahi()
     {
         printf("Batch %d: size : %d\n", i, det[i].size());
         osd(images[i], det[i]);
-        cv::imwrite("result/dfine.jpg", images[i]);
+        cv::imwrite("result/yolo11_sahi.jpg", images[i]);
     }
 }

@@ -7,48 +7,22 @@
 
 enum class ModelType : int
 {
-    YOLOV5         = 0,
-    YOLOV5SAHI     = 1,
-    YOLO11         = 2,
-    YOLO11SAHI     = 3,
-    YOLO11POSE     = 4,
-    YOLO11POSESAHI = 5,
-    YOLO11SEG      = 6,
-    YOLO11SEGSAHI  = 7,
-    YOLO11OBB      = 8,
-    YOLO11OBBSAHI  = 9,
-    DFINE          = 10,
-    DFINESAHI      = 11
+    YOLO11    = 2,
+    YOLO11SAHI = 3,
+    DFINE     = 10,
+    DFINESAHI = 11
 };
 
-// 为枚举类添加字符串转换功能
 namespace ModelTypeConverter
 {
-// 枚举转字符串
 inline std::string to_string(ModelType type)
 {
     switch (type)
     {
-    case ModelType::YOLOV5:
-        return "YOLOV5";
-    case ModelType::YOLOV5SAHI:
-        return "YOLOV5SAHI";
     case ModelType::YOLO11:
         return "YOLO11";
     case ModelType::YOLO11SAHI:
         return "YOLO11SAHI";
-    case ModelType::YOLO11POSE:
-        return "YOLO11POSE";
-    case ModelType::YOLO11POSESAHI:
-        return "YOLO11POSESAHI";
-    case ModelType::YOLO11SEG:
-        return "YOLO11SEG";
-    case ModelType::YOLO11SEGSAHI:
-        return "YOLO11SEGSAHI";
-    case ModelType::YOLO11OBB:
-        return "YOLO11OBB";
-    case ModelType::YOLO11OBBSAHI:
-        return "YOLO11OBBSAHI";
     case ModelType::DFINE:
         return "DFINE";
     case ModelType::DFINESAHI:
@@ -58,19 +32,14 @@ inline std::string to_string(ModelType type)
     }
 }
 
-// 字符串转枚举
 inline ModelType from_string(const std::string &str)
 {
-    static const std::unordered_map<std::string, ModelType> str2enum = {{"YOLOV5", ModelType::YOLOV5},
-                                                                        {"YOLOV5SAHI", ModelType::YOLOV5SAHI},
-                                                                        {"YOLO11", ModelType::YOLO11},
-                                                                        {"YOLO11SAHI", ModelType::YOLO11SAHI},
-                                                                        {"YOLO11POSE", ModelType::YOLO11POSE},
-                                                                        {"YOLO11POSESAHI", ModelType::YOLO11POSESAHI},
-                                                                        {"YOLO11SEG", ModelType::YOLO11SEG},
-                                                                        {"YOLO11SEGSAHI", ModelType::YOLO11SEGSAHI},
-                                                                        {"YOLO11OBB", ModelType::YOLO11OBB},
-                                                                        {"YOLO11OBBSAHI", ModelType::YOLO11OBBSAHI}};
+    static const std::unordered_map<std::string, ModelType> str2enum = {
+        {"YOLO11", ModelType::YOLO11},
+        {"YOLO11SAHI", ModelType::YOLO11SAHI},
+        {"DFINE", ModelType::DFINE},
+        {"DFINESAHI", ModelType::DFINESAHI}
+    };
 
     auto it = str2enum.find(str);
     if (it != str2enum.end())

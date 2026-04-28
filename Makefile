@@ -4,43 +4,37 @@ workdir   := workspace
 srcdir    := src
 objdir    := objs
 stdcpp    := c++17
-cuda_home := /usr/local/cuda-12
-cuda_arch := 8.6
+cuda_home := /usr/local/cuda
+cuda_arch := 75
 nvcc      := $(cuda_home)/bin/nvcc -ccbin=$(cc)
 
 
 project_include_path   := src
-opencv_include_path    := /workspace/compile/__install/opencv490/include/opencv4
-trt_include_path       := /opt/nvidia/TensorRT-10.9.0.34/include
+opencv_include_path    := $(shell pkg-config --cflags opencv4 | sed 's/-I//g')
+trt_include_path       := /usr/include/x86_64-linux-gnu
 cuda_include_path      := $(cuda_home)/include
 freetype_include_path  := /usr/include/freetype2
-
-python_include_path  := /usr/include/python3.10
 
 
 include_paths        := $(project_include_path) \
 						$(opencv_include_path) \
 						$(trt_include_path) \
 						$(cuda_include_path) \
-						$(freetype_include_path) \
-						$(python_include_path)
+						$(freetype_include_path)
 
 
 
-opencv_library_path  := /workspace/compile/__install/opencv490/lib
-trt_library_path     := /opt/nvidia/TensorRT-10.9.0.34/lib
+opencv_library_path  := $(shell pkg-config --libs opencv4 | grep -oP '(?<=-L)\S+' || true)
+trt_library_path     := /usr/lib/x86_64-linux-gnu
 cuda_library_path    := $(cuda_home)/lib64/
-python_library_path  := 
 
 library_paths        := $(opencv_library_path) \
 						$(trt_library_path) \
-						$(cuda_library_path) \
-						$(cuda_library_path) \
-						$(python_library_path)
+						$(cuda_library_path)
 
 link_opencv       := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs
-link_trt          := nvinfer nvinfer_plugin nvonnxparser
-link_cuda         := cuda cublas cudart cudnn
+link_trt          := nvinfer nvinfer_plugin onnxparser
+link_cuda         := cuda cublas cudart
 link_sys          := stdc++ dl
 link_freetype     := freetype
 
@@ -69,9 +63,9 @@ cu_objs := $(cu_srcs:.cu=.cu.o)
 cu_objs := $(cu_objs:$(srcdir)/%=$(objdir)/%)
 cu_mk   := $(cu_objs:.cu.o=.cu.mk)
 
-TRT_VERSION := 10
+TRT_VERSION := 8
 
-# 根据 TRT_VERSION 设置不同的编译选项
+# Filter out TRT10 implementation when using TRT8
 ifeq ($(TRT_VERSION), 8)
     CXXFLAGS = -DTRT8
     cpp_srcs := $(filter-out src/common/tensorrt.cpp, $(cpp_srcs))
@@ -82,7 +76,7 @@ else
     cpp_objs := $(filter-out objs/common/tensorrt8.cpp.o, $(cpp_objs))
 endif
 
-pro_cpp_objs := $(filter-out objs/interface.cpp.o, $(cpp_objs))
+pro_cpp_objs := $(cpp_objs)
 
 ifneq ($(MAKECMDGOALS), clean)
 include $(mks)
@@ -92,9 +86,6 @@ endif
 $(name)   : $(workdir)/$(name)
 
 all       : $(name)
-
-run       : $(name)
-	@cd $(workdir) && python3 demo.py
 
 pro       : $(workdir)/pro
 

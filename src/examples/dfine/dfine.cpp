@@ -17,13 +17,13 @@ static std::vector<std::string> classes_names = {
 
 void run_dfine()
 {
-    std::shared_ptr<InferBase> model_ = load("models/engine/dfine_s_obj2coco.engine",
+    std::shared_ptr<InferBase> model_ = load("models/dfine_n_coco.engine",
         ModelType::DFINE,
         classes_names,
         0,
         0.5f,
         0.45f,
-        16,
+        1,
         false,
         0,
         0,
@@ -51,13 +51,13 @@ void run_dfine()
 
 void run_dfine_sahi()
 {
-    std::shared_ptr<InferBase> model_ = load("models/engine/dfine_l_obj2coco.engine",
+    std::shared_ptr<InferBase> model_ = load("models/dfine_n_coco.engine",
         ModelType::DFINESAHI,
         classes_names,
         0,
         0.5f,
         0.45f,
-        16,
+        1,
         true,
         0,
         0,
