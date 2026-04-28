@@ -133,6 +133,28 @@ InferResult DFineModelImpl::forwards(const std::vector<cv::Mat> &inputs, void *s
     checkRuntime(cudaMemcpyAsync(output_scores_.cpu(), output_scores_.gpu(), output_scores_.gpu_bytes(), cudaMemcpyDeviceToHost, stream_));
     
     checkRuntime(cudaStreamSynchronize(stream_));
+
+    printf("[D-FINE] === All %d raw detections before confidence filtering ===\n", label_head_dims_[1]);
+    for (int ib = 0; ib < infer_batch_size; ++ib)
+    {
+#if NV_TENSORRT_MAJOR >= 10
+        int64_t* labels_host   = output_labels_.cpu() + ib * label_head_dims_[1];
+#else
+        int32_t* labels_host   = output_labels_.cpu() + ib * label_head_dims_[1];
+#endif
+        float* boxes_host  = output_boxes_.cpu() + ib * box_head_dims_[1] * box_head_dims_[2];
+        float* scores_host = output_scores_.cpu() + ib * score_head_dims_[1];
+
+        for (int i = 0; i < label_head_dims_[1]; ++i)
+        {
+            int label = (int)labels_host[i];
+            float score = scores_host[i];
+            float * pbox = boxes_host + i * box_head_dims_[2];
+            printf("[D-FINE] batch=%d idx=%d label=%d score=%.6f box=[%.2f, %.2f, %.2f, %.2f]\n",
+                   ib, i, label, score, pbox[0], pbox[1], pbox[2], pbox[3]);
+        }
+    }
+    printf("[D-FINE] === End raw detections ===\n");
     
     std::vector<object::DetectionBoxArray> arrout(num_image);
     for (int ib = 0; ib < infer_batch_size; ++ib)

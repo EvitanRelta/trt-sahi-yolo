@@ -148,6 +148,23 @@ InferResult Yolo11ModelImpl::forwards(const std::vector<cv::Mat> &inputs, void *
                                  cudaMemcpyDeviceToHost,
                                  stream_));
     checkRuntime(cudaStreamSynchronize(stream_));
+    printf("[YOLO11] === Raw detections before keepflag filtering ===\n");
+    for (int ib = 0; ib < num_image; ++ib)
+    {
+        float *parray = output_boxarray_.cpu() + ib * (max_image_boxes_ * num_box_element_);
+        int count     = min(max_image_boxes_, *(image_box_counts_[ib]->cpu()));
+        printf("[YOLO11] batch=%d raw detection count (after conf thresh): %d\n", ib, count);
+        for (int i = 0; i < count; ++i)
+        {
+            float *pbox = parray + i * num_box_element_;
+            if (pbox[4] > 0)
+            {
+                printf("[YOLO11] batch=%d idx=%d score=%.6f label=%d box=[%.2f, %.2f, %.2f, %.2f] keepflag=%d\n",
+                       ib, i, pbox[4], (int)pbox[5], pbox[0], pbox[1], pbox[2], pbox[3], (int)pbox[6]);
+            }
+        }
+    }
+    printf("[YOLO11] === End raw detections ===\n");
     std::vector<object::DetectionBoxArray> arrout(num_image);
 
     for (int ib = 0; ib < num_image; ++ib)

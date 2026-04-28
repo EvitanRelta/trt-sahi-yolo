@@ -44,8 +44,10 @@ void run_yolo11()
     for (int i = 0; i < (int)images.size(); i++)
     {
         printf("Batch %d: size : %d\n", i, (int)det[i].size());
-        for (auto& d : det[i]) {
-            float conf = d.score;
+        printf("[YOLO11] Total detections: %zu\n", det[i].size());
+        for (int j = 0; j < (int)det[i].size(); j++) {
+            printf("[YOLO11] Detection %d: confidence=%f\n", j, det[i][j].score);
+            float conf = det[i][j].score;
             if (std::isnan(conf) || conf > 1.0f || conf < 0.0f) {
                 printf("Warning: unusual confidence value: %f\n", conf);
             }
