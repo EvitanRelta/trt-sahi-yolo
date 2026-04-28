@@ -33,7 +33,7 @@ library_paths        := $(opencv_library_path) \
 						$(cuda_library_path)
 
 link_opencv       := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs
-link_trt          := nvinfer nvinfer_plugin onnxparser
+link_trt          := nvinfer nvinfer_plugin nvonnxparser
 link_cuda         := cuda cublas cudart
 link_sys          := stdc++ dl
 link_freetype     := freetype
@@ -50,7 +50,7 @@ library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
 cpp_compile_flags := -std=$(stdcpp) -w -g -O0 -m64 -fPIC -fopenmp -pthread $(include_paths)
-cu_compile_flags  := -Xcompiler "$(cpp_compile_flags)"
+cu_compile_flags  := -std=$(stdcpp) -Xcompiler "-w -g -O0 -m64 -fPIC -fopenmp -pthread $(include_paths)"
 link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN' $(library_paths) $(link_librarys)
 
 cpp_srcs := $(shell find $(srcdir) -name "*.cpp")
