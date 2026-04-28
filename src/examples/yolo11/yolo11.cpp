@@ -16,6 +16,7 @@ static std::vector<std::string> classes_names = {
 
 void run_yolo11()
 {
+    printf("=== run_yolo11 ===\n");
     std::shared_ptr<InferBase> model_ = load("models/yolo11n.engine",
         ModelType::YOLO11,
         classes_names,
@@ -28,19 +29,29 @@ void run_yolo11()
         0,
         0.0,
         0.0);
+    if (!model_) {
+        printf("Failed to load YOLO11 model!\n");
+        return;
+    }
     cv::Mat image = cv::imread("inference/persons.jpg");
+    if (image.empty()) {
+        printf("Failed to read image!\n");
+        return;
+    }
     std::vector<cv::Mat> images = {image};
     auto det = model_->forwards(images);
-    for (int i = 0; i < images.size(); i++)
+    for (int i = 0; i < (int)images.size(); i++)
     {
-        printf("Batch %d: size : %d\n", i, det[i].size());
+        printf("Batch %d: size : %d\n", i, (int)det[i].size());
         osd(images[i], det[i]);
         cv::imwrite("result/yolo11.jpg", images[i]);
     }
+    printf("=== run_yolo11 done ===\n");
 }
 
 void run_yolo11_sahi()
 {
+    printf("=== run_yolo11_sahi ===\n");
     std::shared_ptr<InferBase> model_ = load("models/yolo11n.engine",
         ModelType::YOLO11SAHI,
         classes_names,
@@ -53,13 +64,26 @@ void run_yolo11_sahi()
         640,
         0.3,
         0.3);
+    if (!model_) {
+        printf("Failed to load YOLO11 SAHI model! (engine may need dynamic batch for SAHI)\n");
+        return;
+    }
     cv::Mat image = cv::imread("inference/persons.jpg");
+    if (image.empty()) {
+        printf("Failed to read image!\n");
+        return;
+    }
     std::vector<cv::Mat> images = {image};
     auto det = model_->forwards(images);
-    for (int i = 0; i < images.size(); i++)
+    if (det.empty()) {
+        printf("YOLO11 SAHI inference returned empty results!\n");
+        return;
+    }
+    for (int i = 0; i < (int)images.size(); i++)
     {
-        printf("Batch %d: size : %d\n", i, det[i].size());
+        printf("Batch %d: size : %d\n", i, (int)det[i].size());
         osd(images[i], det[i]);
         cv::imwrite("result/yolo11_sahi.jpg", images[i]);
     }
+    printf("=== run_yolo11_sahi done ===\n");
 }

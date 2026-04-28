@@ -17,6 +17,7 @@ static std::vector<std::string> classes_names = {
 
 void run_dfine()
 {
+    printf("=== run_dfine ===\n");
     std::shared_ptr<InferBase> model_ = load("models/dfine_n_coco.engine",
         ModelType::DFINE,
         classes_names,
@@ -29,28 +30,45 @@ void run_dfine()
         0,
         0.0,
         0.0);
+    if (!model_) {
+        printf("Failed to load D-FINE model!\n");
+        return;
+    }
     cv::Mat image = cv::imread("inference/persons.jpg");
+    if (image.empty()) {
+        printf("Failed to read image!\n");
+        return;
+    }
     std::vector<cv::Mat> images = {image};
+    // Warmup
+    for (int i = 0; i < 5; i++)
+        model_->forwards(images);
+    // Benchmark
     nv::EventTimer timer;
-    for (int i = 0; i< 20; i++)
-        auto det = model_->forwards(images);
-    for (int i = 0; i< 100; i++)
+    for (int i = 0; i < 20; i++)
     {
         timer.start();
         auto det = model_->forwards(images);
         timer.stop();
     }
+    // Final inference with output
     auto det = model_->forwards(images);
-    for (int i = 0; i < images.size(); i++)
-    {
-        printf("Batch %d: size : %d\n", i, det[i].size());
-        osd(images[i], det[i]);
-        cv::imwrite("result/run_dfine.jpg", images[i]);
+    if (det.empty()) {
+        printf("D-FINE inference returned empty results!\n");
+        return;
     }
+    for (int i = 0; i < (int)images.size(); i++)
+    {
+        printf("Batch %d: size : %d\n", i, (int)det[i].size());
+        osd(images[i], det[i]);
+        cv::imwrite("result/dfine.jpg", images[i]);
+    }
+    printf("=== run_dfine done ===\n");
 }
 
 void run_dfine_sahi()
 {
+    printf("=== run_dfine_sahi ===\n");
     std::shared_ptr<InferBase> model_ = load("models/dfine_n_coco.engine",
         ModelType::DFINESAHI,
         classes_names,
@@ -63,13 +81,26 @@ void run_dfine_sahi()
         0,
         0.0,
         0.0);
+    if (!model_) {
+        printf("Failed to load D-FINE SAHI model!\n");
+        return;
+    }
     cv::Mat image = cv::imread("inference/persons.jpg");
+    if (image.empty()) {
+        printf("Failed to read image!\n");
+        return;
+    }
     std::vector<cv::Mat> images = {image};
     auto det = model_->forwards(images);
-    for (int i = 0; i < images.size(); i++)
-    {
-        printf("Batch %d: size : %d\n", i, det[i].size());
-        osd(images[i], det[i]);
-        cv::imwrite("result/run_dfine_sahi.jpg", images[i]);
+    if (det.empty()) {
+        printf("D-FINE SAHI inference returned empty results!\n");
+        return;
     }
+    for (int i = 0; i < (int)images.size(); i++)
+    {
+        printf("Batch %d: size : %d\n", i, (int)det[i].size());
+        osd(images[i], det[i]);
+        cv::imwrite("result/dfine_sahi.jpg", images[i]);
+    }
+    printf("=== run_dfine_sahi done ===\n");
 }
