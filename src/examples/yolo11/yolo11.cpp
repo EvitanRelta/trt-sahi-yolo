@@ -1,5 +1,5 @@
 #include "trt/infer.hpp"
-#include "osd/osd.hpp"
+#include "common/draw.hpp"
 #include "common/object.hpp"
 #include <cmath>
 
@@ -52,7 +52,7 @@ void run_yolo11()
                 printf("Warning: unusual confidence value: %f\n", conf);
             }
         }
-        osd(images[i], det[i]);
+        draw::draw_detections(images[i], det[i]);
         cv::imwrite("result/yolo11.jpg", images[i]);
     }
     printf("=== run_yolo11 done ===\n");
@@ -91,7 +91,7 @@ void run_yolo11_sahi()
     for (int i = 0; i < (int)images.size(); i++)
     {
         printf("Batch %d: size : %d\n", i, (int)det[i].size());
-        osd(images[i], det[i]);
+        draw::draw_detections(images[i], det[i]);
         cv::imwrite("result/yolo11_sahi.jpg", images[i]);
     }
     printf("=== run_yolo11_sahi done ===\n");

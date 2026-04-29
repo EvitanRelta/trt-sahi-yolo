@@ -1,5 +1,5 @@
 #include "trt/infer.hpp"
-#include "osd/osd.hpp"
+#include "common/draw.hpp"
 #include "common/object.hpp"
 #include "common/timer.hpp"
 #include <cmath>
@@ -69,7 +69,7 @@ void run_dfine()
                 printf("Warning: unusual confidence value: %f\n", conf);
             }
         }
-        osd(images[i], det[i]);
+        draw::draw_detections(images[i], det[i]);
         cv::imwrite("result/dfine.jpg", images[i]);
     }
     printf("=== run_dfine done ===\n");
@@ -108,7 +108,7 @@ void run_dfine_sahi()
     for (int i = 0; i < (int)images.size(); i++)
     {
         printf("Batch %d: size : %d\n", i, (int)det[i].size());
-        osd(images[i], det[i]);
+        draw::draw_detections(images[i], det[i]);
         cv::imwrite("result/dfine_sahi.jpg", images[i]);
     }
     printf("=== run_dfine_sahi done ===\n");

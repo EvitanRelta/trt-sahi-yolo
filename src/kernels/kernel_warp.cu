@@ -88,41 +88,6 @@ void warp_affine_bilinear_single_channel_mask_plane(float *src,
                                                                                                   matrix_2_3));
 }
 
-// 对 decode_kernel_v5 的包装
-void decode_kernel_invoker_v5(float *predict,
-                              int num_bboxes,
-                              int num_classes,
-                              int output_cdim,
-                              float confidence_threshold,
-                              float nms_threshold,
-                              float *invert_affine_matrix,
-                              float *parray,
-                              int *box_count,
-                              int max_image_boxes,
-                              int num_box_element,
-                              int start_x,
-                              int start_y,
-                              int batch_index,
-                              cudaStream_t stream)
-{
-    auto grid  = grid_dims(num_bboxes);
-    auto block = block_dims(num_bboxes);
-
-    checkKernel(cuda::decode_kernel_v5<<<grid, block, 0, stream>>>(predict,
-                                                                   num_bboxes,
-                                                                   num_classes,
-                                                                   output_cdim,
-                                                                   confidence_threshold,
-                                                                   invert_affine_matrix,
-                                                                   parray,
-                                                                   box_count,
-                                                                   max_image_boxes,
-                                                                   num_box_element,
-                                                                   start_x,
-                                                                   start_y,
-                                                                   batch_index));
-}
-
 // 对 decode_kernel_v11 的包装
 void decode_kernel_invoker_v11(float *predict,
                                int num_bboxes,
@@ -158,107 +123,6 @@ void decode_kernel_invoker_v11(float *predict,
                                                                     batch_index));
 }
 
-// 对 decode_kernel_v11_pose 的包装
-void decode_kernel_invoker_v11_pose(float *predict,
-                                    int num_bboxes,
-                                    int num_classes,
-                                    int output_cdim,
-                                    float confidence_threshold,
-                                    float nms_threshold,
-                                    float *invert_affine_matrix,
-                                    float *parray,
-                                    int *box_count,
-                                    int max_image_boxes,
-                                    int num_box_element,
-                                    int num_key_point,
-                                    int start_x,
-                                    int start_y,
-                                    int batch_index,
-                                    cudaStream_t stream)
-{
-    auto grid  = grid_dims(num_bboxes);
-    auto block = block_dims(num_bboxes);
-
-    checkKernel(cuda::decode_kernel_v11_pose<<<grid, block, 0, stream>>>(predict,
-                                                                         num_bboxes,
-                                                                         num_classes,
-                                                                         output_cdim,
-                                                                         confidence_threshold,
-                                                                         invert_affine_matrix,
-                                                                         parray,
-                                                                         box_count,
-                                                                         max_image_boxes,
-                                                                         num_box_element,
-                                                                         num_key_point,
-                                                                         start_x,
-                                                                         start_y,
-                                                                         batch_index));
-}
-
-// 对 decode_kernel_v11_obb 的包装
-void decode_kernel_invoker_v11_obb(float *predict,
-                                   int num_bboxes,
-                                   int num_classes,
-                                   int output_cdim,
-                                   float confidence_threshold,
-                                   float nms_threshold,
-                                   float *invert_affine_matrix,
-                                   float *parray,
-                                   int *box_count,
-                                   int max_image_boxes,
-                                   int num_box_element,
-                                   int start_x,
-                                   int start_y,
-                                   int batch_index,
-                                   cudaStream_t stream)
-{
-    auto grid  = grid_dims(num_bboxes);
-    auto block = block_dims(num_bboxes);
-
-    checkKernel(cuda::decode_kernel_v11_obb<<<grid, block, 0, stream>>>(predict,
-                                                                        num_bboxes,
-                                                                        num_classes,
-                                                                        output_cdim,
-                                                                        confidence_threshold,
-                                                                        invert_affine_matrix,
-                                                                        parray,
-                                                                        box_count,
-                                                                        max_image_boxes,
-                                                                        num_box_element,
-                                                                        start_x,
-                                                                        start_y,
-                                                                        batch_index));
-}
-
-// 对 decode_single_mask_kernel 的包装
-void decode_single_mask_invoker(float left,
-                                float top,
-                                float *mask_weights,
-                                float *mask_predict,
-                                int mask_width,
-                                int mask_height,
-                                float *mask_out,
-                                int mask_dim,
-                                int out_width,
-                                int out_height,
-                                cudaStream_t stream)
-{
-    // mask_weights is mask_dim(32 element) gpu pointer
-    dim3 grid((out_width + 31) / 32, (out_height + 31) / 32);
-    dim3 block(32, 32);
-
-    checkKernel(cuda::decode_single_mask_kernel<<<grid, block, 0, stream>>>(left,
-                                                                            top,
-                                                                            mask_weights,
-                                                                            mask_predict,
-                                                                            mask_width,
-                                                                            mask_height,
-                                                                            mask_out,
-                                                                            mask_dim,
-                                                                            out_width,
-                                                                            out_height));
-}
-
 // 对 fast_nms_kernel 的包装
 void fast_nms_kernel_invoker(
     float *parray, int *box_count, int max_image_boxes, float nms_threshold, int num_box_element, cudaStream_t stream)
@@ -270,38 +134,6 @@ void fast_nms_kernel_invoker(
                                                                   max_image_boxes,
                                                                   nms_threshold,
                                                                   num_box_element));
-}
-
-// 对 fast_nms_kernel_v11_obb 的包装
-void fast_nms_kernel_invoker_v11_obb(
-    float *parray, int *box_count, int max_image_boxes, float nms_threshold, int num_box_element, cudaStream_t stream)
-{
-    auto grid  = grid_dims(max_image_boxes);
-    auto block = block_dims(max_image_boxes);
-    checkKernel(cuda::fast_nms_obb_kernel<<<grid, block, 0, stream>>>(parray,
-                                                                      box_count,
-                                                                      max_image_boxes,
-                                                                      nms_threshold,
-                                                                      num_box_element));
-}
-
-// 对 fast_nms_pose_kernel 的包装
-void fast_nms_kernel_invoker_v11_pose(float *parray,
-                                      int *box_count,
-                                      int max_image_boxes,
-                                      float nms_threshold,
-                                      int num_box_element,
-                                      int num_key_point,
-                                      cudaStream_t stream)
-{
-    auto grid  = grid_dims(max_image_boxes);
-    auto block = block_dims(max_image_boxes);
-    checkKernel(cuda::fast_nms_pose_kernel<<<grid, block, 0, stream>>>(parray,
-                                                                       box_count,
-                                                                       max_image_boxes,
-                                                                       nms_threshold,
-                                                                       num_box_element,
-                                                                       num_key_point));
 }
 
 void slice_plane(const uint8_t *image,

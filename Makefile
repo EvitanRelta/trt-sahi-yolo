@@ -13,14 +13,12 @@ project_include_path   := src
 opencv_include_path    := $(shell pkg-config --cflags opencv4 | sed 's/-I//g')
 trt_include_path       := /usr/include/x86_64-linux-gnu
 cuda_include_path      := $(cuda_home)/include
-freetype_include_path  := /usr/include/freetype2
 
 
 include_paths        := $(project_include_path) \
 						$(opencv_include_path) \
 						$(trt_include_path) \
-						$(cuda_include_path) \
-						$(freetype_include_path)
+						$(cuda_include_path)
 
 
 
@@ -32,13 +30,12 @@ library_paths        := $(opencv_library_path) \
 						$(trt_library_path) \
 						$(cuda_library_path)
 
-link_opencv       := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs
-link_trt          := nvinfer nvinfer_plugin nvonnxparser
-link_cuda         := cuda cublas cudart
+link_opencv       := opencv_core opencv_imgproc opencv_imgcodecs
+link_trt          := nvinfer
+link_cuda         := cuda cudart
 link_sys          := stdc++ dl
-link_freetype     := freetype
 
-link_librarys     := $(link_opencv) $(link_trt) $(link_cuda) $(link_freetype) $(link_sys)
+link_librarys     := $(link_opencv) $(link_trt) $(link_cuda) $(link_sys)
 
 
 empty := 
@@ -49,9 +46,9 @@ include_paths := $(foreach item,$(include_paths),-I$(item))
 library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
-cpp_compile_flags := -std=$(stdcpp) -w -g -O0 -m64 -fPIC -fopenmp -pthread $(include_paths)
-cu_compile_flags  := -std=$(stdcpp) -Xcompiler "-w -g -O0 -m64 -fPIC -fopenmp -pthread $(include_paths)"
-link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN' $(library_paths) $(link_librarys)
+cpp_compile_flags := -std=$(stdcpp) -w -g -O0 -m64 -fPIC -pthread $(include_paths)
+cu_compile_flags  := -std=$(stdcpp) -Xcompiler "-w -g -O0 -m64 -fPIC -pthread $(include_paths)"
+link_flags        := -pthread -Wl,-rpath='$$ORIGIN' $(library_paths) $(link_librarys)
 
 cpp_srcs := $(shell find $(srcdir) -name "*.cpp")
 cpp_objs := $(cpp_srcs:.cpp=.cpp.o)
