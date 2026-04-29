@@ -44,3 +44,5 @@ workspace/*
 objs
 .idea
 .vscode
+
+build/
