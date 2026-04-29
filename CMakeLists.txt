@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(trt-sahi-yolo LANGUAGES CXX CUDA)
 
-# ── Options ──────────────────────────────────────────────────────────────────
-option(TRT8 "Use TensorRT 8 API (default)" ON)
-
 # ── CUDA architecture ───────────────────────────────────────────────────────
 # If the user didn't pass -DCMAKE_CUDA_ARCHITECTURES, auto-detect it.
 # CMake 3.18+ has built-in "native" support; older versions need a helper
@@ -40,6 +37,18 @@ find_library(NVINFER_LIB nvinfer
 
 if(NOT TRT_INCLUDE_DIR OR NOT NVINFER_LIB)
     message(FATAL_ERROR "TensorRT not found. Set TRT_INCLUDE_DIR and NVINFER_LIB.")
+endif()
+
+# ── Auto-detect TensorRT version ────────────────────────────────────────────
+include(cmake/detect_trt_version.cmake)
+detect_trt_version(TRT_VERSION_MAJOR)
+
+if(TRT_VERSION_MAJOR LESS 10)
+    set(TRT8 ON)
+    message(STATUS "Using TensorRT ${TRT_VERSION_MAJOR}.x — TRT8 API")
+else()
+    set(TRT8 OFF)
+    message(STATUS "Using TensorRT ${TRT_VERSION_MAJOR}.x — TRT10 API")
 endif()
 
 # CUDA runtime library
