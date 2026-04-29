@@ -17,19 +17,12 @@ Both standard inference and SAHI (Slice and Stitch) variants were requested, wit
 
 ```bash
 apt-fast update
-apt-fast install -y libfreetype6-dev python3-pip
+apt-fast install -y python3-pip
 pip3 install onnx
-apt-fast install -y fonts-wqy-zenhei
 ```
 
-- `libfreetype6-dev` — FreeType headers for OSD text rendering (used by `src/osd/cvx_text.cpp`)
 - `onnx` Python package — needed by `v8trans.py` to transpose YOLO11 ONNX output
-- `fonts-wqy-zenhei` — CJK font for OSD text rendering, symlinked:
-  ```bash
-  mkdir -p workspace/font
-  ln -sf /usr/share/fonts/truetype/wqy/wqy-zenhei.ttc workspace/font/SIMKAI.TTF
-  ```
-  The OSD code (`src/osd/osd.cpp`) expects `font/SIMKAI.TTF` relative to the working directory.
+- **FreeType, fonts, and OSD are no longer required** (see Section 9 for details). Drawing is now done with OpenCV's built-in Hershey fonts.
 
 ---
 
@@ -54,9 +47,8 @@ apt-fast install -y fonts-wqy-zenhei
 | D-FINE | `src/trt/dfine/dfine.hpp`, `dfine.cu` |
 | D-FINE SAHI | `src/trt/dfinesahi/dfinesahi.hpp`, `dfinesahi.cu` |
 | SAHI slicing | `src/trt/slice/` (all files) |
-| Common infra | `src/common/` (all files) |
+| Common infra | `src/common/` (all files, including `draw.hpp`) |
 | CUDA kernels | `src/kernels/` (all files) |
-| OSD visualization | `src/osd/` (all files) |
 | Examples | `src/examples/yolo11/`, `src/examples/dfine/` |
 
 ### Source Code Trimming
@@ -92,8 +84,10 @@ Key changes from the original Makefile (which targeted CUDA 12 + TRT 10):
 | OpenCV lib | Hardcoded path | `pkg-config --libs opencv4` |
 | TRT include | `/opt/nvidia/TensorRT-10.x/include` | `/usr/include/x86_64-linux-gnu` |
 | TRT lib | `/opt/nvidia/TensorRT-10.x/lib` | `/usr/lib/x86_64-linux-gnu` |
-| Link TRT libs | `nvinfer nvinfer_plugin nvonnxparser` | same (fixed from initial `onnxparser` typo) |
-| CUDA link | `cuda cublas cudart cudnn` | `cuda cublas cudart` (removed cudnn) |
+| Link TRT libs | `nvinfer nvinfer_plugin nvonnxparser` | `nvinfer nvonnxparser` (removed `nvinfer_plugin`) |
+| CUDA link | `cuda cublas cudart cudnn` | `cuda cudart` (removed `cublas`, `cudnn`) |
+| OpenCV lib | (includes `opencv_videoio`) | removed `opencv_videoio` |
+| OpenMP | `-fopenmp` in compile/link flags | removed |
 | Python include/lib | Present | Removed |
 | Targets | `trtsahi.so` (shared lib) + `pro` | `pro` only |
 
@@ -219,7 +213,7 @@ Batch=16 for D-FINE caused OOM during trtexec's profiling phase. Batch=1 succeed
 |---------|--------|-------|
 | YOLO11 standard inference | ✅ Working | `run_yolo11()` — 218 qps, result saved to `result/yolo11.jpg` |
 | D-FINE standard inference | ✅ Working | `run_dfine()` — 118 qps, result saved to `result/dfine.jpg` |
-| OSD text rendering | ✅ Working | Uses FreeType + WQY ZenHei font |
+| Drawing/visualization | ✅ Working | Uses OpenCV `cv::rectangle` + `cv::putText` (Hershey font) via `src/common/draw.hpp` |
 | Build system | ✅ Working | `make pro -j$(nproc)` |
 
 ### Not Working ❌
@@ -336,8 +330,10 @@ trtexec:        /usr/src/tensorrt/bin/trtexec
 ```
 /workspace/trt-sahi-yolo/
 ├── Makefile                              # Build system (TRT8 mode)
+├── DEPENDENCIES.md                       # Dependency inventory (inference vs export-only)
 ├── src/
 │   ├── main.cpp                          # Entry point
+│   ├── common/draw.hpp                   # Header-only OpenCV drawing (boxes + labels)
 │   ├── trt/infer.hpp                     # ModelType enum + load() declaration
 │   ├── trt/infer.cpp                     # Factory: routes ModelType to implementations
 │   ├── trt/yolo/yolo.hpp                 # YOLO base class (TRT8/10 abstraction)
@@ -354,7 +350,6 @@ trtexec:        /usr/src/tensorrt/bin/trtexec
 │   │   └── dfine_n_coco.engine           # TRT8 engine (static batch=1)
 │   ├── inference/                        # Test images
 │   ├── result/                           # Output images
-│   ├── font/SIMKAI.TTF                   # Symlink → wqy-zenhei font
 │   └── v8trans.py                        # ONNX transpose script for YOLO11
 ├── yolo11n.onnx                          # Original YOLO11 ONNX
 ├── yolo11n.transd.onnx                   # Transposed YOLO11 ONNX (v8trans.py output)
@@ -362,3 +357,50 @@ trtexec:        /usr/src/tensorrt/bin/trtexec
 ├── coco.names                            # 80 COCO class names
 └── WORK_DONE.md                          # This file
 ```
+
+---
+
+## 9. Dependency Cleanup (2026-04-29)
+
+Removed FreeType, external fonts, and OSD overlay code. Replaced with minimal OpenCV-only drawing.
+
+### OSD/FreeType/font removal
+
+- **Deleted** `src/osd/` entirely: `osd.hpp`, `osd.cpp`, `cvx_text.hpp`, `cvx_text.cpp`, `labelLayout.hpp`, `position.hpp`.
+- **Deleted** `workspace/font/SIMKAI.TTF` and the empty `workspace/font/` directory.
+- **Added** `src/common/draw.hpp` — header-only `draw::draw_detections(cv::Mat&, const DetectionBoxArray&)` using `cv::rectangle` and `cv::putText` (Hershey font). No external font files needed.
+- **Updated** `src/examples/yolo11/yolo11.cpp` and `src/examples/dfine/dfine.cpp` to `#include "common/draw.hpp"` and call `draw::draw_detections` instead of `osd()`.
+
+### Makefile link-flag simplification
+
+| Removed | Reason |
+|---------|--------|
+| FreeType include/link (`/usr/include/freetype2`, `-lfreetype`) | OSD deleted |
+| `opencv_videoio` | Not used by remaining code |
+| `nvonnxparser` removed from link, then restored | Only `nvinfer` + `nvonnxparser` kept; `nvinfer_plugin` dropped |
+| `cublas` from CUDA link flags | Not required by inference path |
+| `-fopenmp` from compile and link flags | Not used |
+
+Build verified: `make clean && make pro -j$(nproc)` succeeds.
+
+### Dead CUDA kernel/wrapper code removed
+
+| Symbol / wrapper | File(s) |
+|------------------|---------|
+| `decode_kernel_v5` / `decode_kernel_invoker_v5` | `src/kernels/decode.cu`, `decode.cuh` |
+| YOLO11 pose decode/NMS wrappers | `src/kernels/kernel_warp.cu`, `kernel_warp.hpp` |
+| YOLO11 OBB decode/NMS wrappers + OBB-only helpers | `src/kernels/kernel_warp.cu`, `kernel_warp.hpp` |
+| `decode_single_mask_kernel` / `decode_single_mask_invoker` | `src/kernels/decode.cu`, `decode.cuh` |
+
+### Stale workspace files removed
+
+- `workspace/trtsahi.pyi` (Python stub, no longer needed)
+- `yolo11n.trt` (old engine file in repo root)
+
+### New file added
+
+- `DEPENDENCIES.md` — separates inference-only from ONNX→TRT export-only dependencies; documents that FreeType/fonts/OSD are no longer required.
+
+### Verification
+
+`make clean && make pro -j$(nproc)` succeeded. Running `./pro` from `workspace/` produced result images with 20 filtered detections each for YOLO11 and D-FINE. No SAHI static-batch issue in this run.
