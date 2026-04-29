@@ -5,7 +5,22 @@ project(trt-sahi-yolo LANGUAGES CXX CUDA)
 option(TRT8 "Use TensorRT 8 API (default)" ON)
 
 # ── CUDA architecture ───────────────────────────────────────────────────────
-set(CMAKE_CUDA_ARCHITECTURES 75)
+# If the user didn't pass -DCMAKE_CUDA_ARCHITECTURES, auto-detect it.
+# CMake 3.18+ has built-in "native" support; older versions need a helper
+# that compiles and runs a small CUDA program to query the GPU.
+if(NOT CMAKE_CUDA_ARCHITECTURES OR CMAKE_CUDA_ARCHITECTURES STREQUAL "")
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+        set(CMAKE_CUDA_ARCHITECTURES native)
+        message(STATUS "Auto-detecting CUDA architecture via CMake native support")
+    else()
+        include(cmake/detect_cuda_arch.cmake)
+        detect_cuda_arch(_DETECTED_ARCH)
+        set(CMAKE_CUDA_ARCHITECTURES "${_DETECTED_ARCH}")
+        message(STATUS "Auto-detected CUDA architecture: sm_${CMAKE_CUDA_ARCHITECTURES}")
+    endif()
+else()
+    message(STATUS "Using user-specified CUDA architecture: sm_${CMAKE_CUDA_ARCHITECTURES}")
+endif()
 
 # ── C++ standard ─────────────────────────────────────────────────────────────
 set(CMAKE_CXX_STANDARD 17)
